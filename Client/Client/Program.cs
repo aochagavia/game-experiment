@@ -5,43 +5,50 @@ namespace Client
 {
     class Program
     {
+        static Direction? KeyToDirection(Key key)
+        {
+            return key switch
+            {
+                Key.Right => Direction.East,
+                Key.Left => Direction.West,
+                Key.Up => Direction.North,
+                Key.Down => Direction.South,
+                _ => null,
+            };
+        }
+
         static void Main(string[] args)
         {
             using var window = new GameWindow();
             using var worldRenderer = new WorldRenderer(window.GraphicsDevice);
             using var commandList = window.GraphicsDevice.ResourceFactory.CreateCommandList();
 
+            var inputState = new InputState();
             var world = new World();
             world.Init();
 
             window.Sdl2Window.KeyDown += keyEvent =>
             {
-                switch (keyEvent.Key)
+                var direction = KeyToDirection(keyEvent.Key);
+                if (direction != null)
                 {
-                    case Key.Right:
-                        world.StartWalking(Direction.East);
-                        break;
-                    case Key.Left:
-                        world.StartWalking(Direction.West);
-                        break;
-                    case Key.Up:
-                        world.StartWalking(Direction.North);
-                        break;
-                    case Key.Down:
-                        world.StartWalking(Direction.South);
-                        break;
+                    inputState.StartWalkInput(world.Ticks, direction.Value);
                 }
             };
 
             window.Sdl2Window.KeyUp += keyEvent =>
             {
-                // TODO: only stop walking when you release the key for your own direction
-                world.StopWalking();
+                var direction = KeyToDirection(keyEvent.Key);
+                if (direction != null)
+                {
+                    inputState.StopWalkInput(direction.Value);
+                }
             };
 
             while (window.Sdl2Window.Exists)
             {
                 window.Sdl2Window.PumpEvents();
+                world.ProcessInput(inputState);
                 world.Tick();
 
                 // Draw

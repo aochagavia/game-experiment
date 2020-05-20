@@ -5,7 +5,7 @@ namespace Client.Simulation
 {
     public class World
     {
-        private UInt64 _ticks = 0;
+        public UInt64 Ticks { get; private set; } = 0;
 
         private readonly List<Player> _players = new List<Player>();
         public IEnumerable<Player> Players => _players;
@@ -20,7 +20,7 @@ namespace Client.Simulation
 
         public void StartWalking(Direction direction)
         {
-            if (_player.IsWalking)
+            if (_player.IsWalking && _player.Direction == direction)
             {
                 return;
             }
@@ -31,15 +31,27 @@ namespace Client.Simulation
 
         public void StopWalking()
         {
-            // TODO: handle the case when multiple keys were pressed
             _player.WalkingStep = 0;
+        }
+
+        public void ProcessInput(InputState inputState)
+        {
+            var direction = inputState.ActiveWalkInput();
+            if (direction.HasValue)
+            {
+                StartWalking(direction.Value);
+            }
+            else
+            {
+                StopWalking();
+            }
         }
 
         public void Tick()
         {
             // TODO: limit FPS in a smarter way
-            _ticks++;
-            if (_ticks % 128 != 0) return;
+            Ticks++;
+            if (Ticks % 128 != 0) return;
 
             if (!_player.IsWalking) return;
 
@@ -63,7 +75,7 @@ namespace Client.Simulation
                 _ => 0f,
             };
 
-            _player.X = (_player.X + 0.01f * xMultiplier) % 960;
+            _player.X = (_player.X + 0.01f * xMultiplier) % 540;
             _player.Y = (_player.Y + 0.01f * yMultiplier) % 540;
         }
     }

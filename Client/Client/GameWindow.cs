@@ -16,7 +16,7 @@ namespace Client
             {
                 X = 100,
                 Y = 100,
-                WindowWidth = 960,
+                WindowWidth = 540,
                 WindowHeight = 540,
                 WindowTitle = "Skeleton"
             });
