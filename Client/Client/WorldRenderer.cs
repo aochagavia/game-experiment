@@ -133,6 +133,7 @@ namespace Client
                 Direction.West => 1,
                 Direction.South => 2,
                 Direction.East => 3,
+                _ => 0, // Should never be reached
             };
 
             var leftOffset = player.WalkingStep * tileWidth;

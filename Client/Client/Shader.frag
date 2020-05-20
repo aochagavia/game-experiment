@@ -10,5 +10,4 @@ layout(set = 0, binding = 0) uniform sampler2D SkeletonTexture;
 void main()
 {
     fsout_Color = texture(SkeletonTexture, fsin_TexturePosition);
-//    fsout_Color = fsin_Color;
 }
