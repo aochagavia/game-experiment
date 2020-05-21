@@ -31,6 +31,7 @@ namespace Client
         private Shader[] _shaders;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
+        private TileSetAddresser _tileSetAddresser;
 
         public WorldRenderer(GraphicsDevice graphicsDevice)
         {
@@ -53,14 +54,8 @@ namespace Client
 
         private void InitTextures()
         {
-            var stream = _assembly.GetManifestResourceStream("Client.Tiles.BODY_skeleton.png");
-            if (stream == null)
-            {
-                var x = _assembly.GetManifestResourceNames();
-                throw new Exception("Stream is null");
-            }
-            var imageSharpTexture = new ImageSharpTexture(stream);
-
+            _tileSetAddresser = new TileSetAddresser();
+            var imageSharpTexture = new ImageSharpTexture(_tileSetAddresser.TileSet);
             _skeletonTexture = imageSharpTexture.CreateDeviceTexture(_graphicsDevice, _graphicsDevice.ResourceFactory);
             _skeletonTextureView = _graphicsDevice.ResourceFactory.CreateTextureView(_skeletonTexture);
         }
@@ -123,9 +118,7 @@ namespace Client
             var player = world.Players.FirstOrDefault();
 
             // TODO: use a camera instead of rendering stuff directly
-
-            float tileWidth = 1f / 9;
-            float tileHeight = 1f / 4;
+            var (tileWidth, tileHeight) = _tileSetAddresser.GetSkeletonTileDimensions();
 
             var topOffset = tileHeight * player.Direction switch
             {
