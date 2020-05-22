@@ -15,6 +15,7 @@ namespace Client
         private readonly int _skeletonImageWidth;
         private readonly int _skeletonImageHeight;
         private readonly int _sandImageWidth;
+        private readonly int _sandImageHeight;
         private readonly int _tileSetHeight;
 
         public TileSetAddresser()
@@ -25,6 +26,7 @@ namespace Client
             _skeletonImageWidth = skeletonTiles.Width;
             _skeletonImageHeight = skeletonTiles.Height;
             _sandImageWidth = sandTiles.Width;
+            _sandImageHeight = sandTiles.Height;
             _tileSetHeight = Math.Max(skeletonTiles.Height, sandTiles.Height);
 
             TileSet = new Image<Rgba32>(skeletonTiles.Width + sandTiles.Width, _tileSetHeight);
@@ -56,6 +58,23 @@ namespace Client
             var tileHeight = (1f / 4) * skeletonRelativeHeight;
 
             return (tileWidth, tileHeight);
+        }
+
+        public (float, float) GetSandTileDimensions()
+        {
+            float totalWidth = _skeletonImageWidth + _sandImageWidth;
+            var sandRelativeWidth = _sandImageWidth / totalWidth;
+            var tileWidth = (1f / 12) * sandRelativeWidth;
+
+            var sandRelativeHeight = _sandImageHeight / _tileSetHeight;
+            var tileHeight = (1f / 14);
+
+            return (tileWidth, tileHeight);
+        }
+
+        public float GetSandTopLeftCornerX()
+        {
+            return GetSkeletonTileDimensions().Item1 * 9;
         }
     }
 }

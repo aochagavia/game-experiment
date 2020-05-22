@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -13,25 +14,15 @@ namespace Client
     {
         private readonly Assembly _assembly = typeof(WorldRenderer).Assembly;
 
-        private readonly VertexPositionColorTexturePosition[] quadVertices =
-        {
-            new VertexPositionColorTexturePosition(new Vector2(0, 0), RgbaFloat.Red, new Vector2(0, 0)),
-            new VertexPositionColorTexturePosition(new Vector2(0, 0), RgbaFloat.Green, new Vector2(0, 0)),
-            new VertexPositionColorTexturePosition(new Vector2(0, 0), RgbaFloat.Blue, new Vector2(0, 0)),
-            new VertexPositionColorTexturePosition(new Vector2(0, 0), RgbaFloat.Yellow, new Vector2(0, 0)),
-        };
-
-        private readonly ushort[] quadIndices = { 0, 1, 2, 3 };
-
         private readonly GraphicsDevice _graphicsDevice;
         private DeviceBuffer _vertexBuffer;
-        private DeviceBuffer _indexBuffer;
         private Texture _skeletonTexture;
         private TextureView _skeletonTextureView;
         private Shader[] _shaders;
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
         private TileSetAddresser _tileSetAddresser;
+        private ArrayList<VertexPositionColorTexturePosition> vertices = new ArrayList<VertexPositionColorTexturePosition>();
 
         public WorldRenderer(GraphicsDevice graphicsDevice)
         {
@@ -45,11 +36,7 @@ namespace Client
 
         private void InitBuffers()
         {
-            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(4 * VertexPositionColorTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
-            _indexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(4 * sizeof(ushort), BufferUsage.IndexBuffer));
-
-            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, quadVertices);
-            _graphicsDevice.UpdateBuffer(_indexBuffer, 0, quadIndices);
+            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(vertices.Capacity * VertexPositionColorTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
         }
 
         private void InitTextures()
@@ -98,12 +85,12 @@ namespace Client
                 depthWriteEnabled: true,
                 comparisonKind: ComparisonKind.LessEqual);
             pipelineDescription.RasterizerState = new RasterizerStateDescription(
-                cullMode: FaceCullMode.Back,
+                cullMode: FaceCullMode.None,
                 fillMode: PolygonFillMode.Solid,
                 frontFace: FrontFace.Clockwise,
                 depthClipEnabled: true,
                 scissorTestEnabled: false);
-            pipelineDescription.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
+            pipelineDescription.PrimitiveTopology = PrimitiveTopology.TriangleList;
             pipelineDescription.ResourceLayouts = new [] { textureLayout };
             pipelineDescription.ShaderSet = new ShaderSetDescription(
                 vertexLayouts: new [] { vertexLayout },
@@ -117,6 +104,19 @@ namespace Client
             // TODO: allow multiple players, somehow
             var player = world.Players.FirstOrDefault();
 
+
+            vertices.Clear();
+
+            DrawSand();
+            DrawSkeleton(player);
+
+            var span = vertices.Elements.AsSpan();
+
+            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, ref span[0], vertices.Count * VertexPositionColorTexturePosition.SizeInBytes);
+        }
+
+        private void DrawSkeleton(Player player)
+        {
             // TODO: use a camera instead of rendering stuff directly
             var (tileWidth, tileHeight) = _tileSetAddresser.GetSkeletonTileDimensions();
 
@@ -131,29 +131,29 @@ namespace Client
 
             var leftOffset = player.WalkingStep * tileWidth;
 
-            var skeletonWidth = tileWidth;
-            var skeletonHeight = tileHeight;
-            quadVertices[0].Position.X = player.X;
-            quadVertices[0].Position.Y = player.Y;
-            quadVertices[0].TexturePosition.X = leftOffset;
-            quadVertices[0].TexturePosition.Y = topOffset;
+            DrawTile(new Vector2(player.X, player.Y), new Vector2(leftOffset, topOffset), tileWidth, tileHeight);
+        }
 
-            quadVertices[1].Position.X = player.X + 0.25f;
-            quadVertices[1].Position.Y = player.Y;
-            quadVertices[1].TexturePosition.X = leftOffset + skeletonWidth;
-            quadVertices[1].TexturePosition.Y = topOffset;
+        private void DrawSand()
+        {
+            var (tileWidth, tileHeight) = _tileSetAddresser.GetSandTileDimensions();
+            var topLeftX = _tileSetAddresser.GetSandTopLeftCornerX();
 
-            quadVertices[2].Position.X = player.X;
-            quadVertices[2].Position.Y = player.Y - 0.25f;
-            quadVertices[2].TexturePosition.X = leftOffset;
-            quadVertices[2].TexturePosition.Y = topOffset + skeletonHeight;
+            DrawTile(new Vector2(0, 0), new Vector2(topLeftX, 0), tileWidth, tileHeight);
 
-            quadVertices[3].Position.X = player.X + 0.25f;
-            quadVertices[3].Position.Y = player.Y - 0.25f;
-            quadVertices[3].TexturePosition.X = leftOffset + skeletonWidth;
-            quadVertices[3].TexturePosition.Y = topOffset + skeletonHeight;
+        }
 
-            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, quadVertices);
+        private void DrawTile(Vector2 position, Vector2 tilePosition, float tileWidth, float tileHeight)
+        {
+            // Triangle 1
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y)));
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+
+            // Triangle 2
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
         }
 
         public void Draw(CommandList commandList, World world)
@@ -164,15 +164,16 @@ namespace Client
             commandList.ClearColorTarget(0, RgbaFloat.Black);
 
             commandList.SetVertexBuffer(0, _vertexBuffer);
-            commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
+            // commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             commandList.SetPipeline(_pipeline);
             commandList.SetGraphicsResourceSet(0, _resourceSet);
-            commandList.DrawIndexed(
-                indexCount: 4,
-                instanceCount: 1,
-                indexStart: 0,
-                vertexOffset: 0,
-                instanceStart: 0);
+            commandList.Draw(vertices.Count);
+            // commandList.DrawIndexed(
+            //     indexCount: 4,
+            //     instanceCount: 1,
+            //     indexStart: 0,
+            //     vertexOffset: 0,
+            //     instanceStart: 0);
         }
 
         public void Dispose()
@@ -189,7 +190,7 @@ namespace Client
             _skeletonTextureView.Dispose();
 
             _vertexBuffer.Dispose();
-            _indexBuffer.Dispose();
+            // _indexBuffer.Dispose();
         }
     }
 }

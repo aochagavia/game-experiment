@@ -14,6 +14,6 @@ namespace Client
             Color = color;
             TexturePosition = texturePosition;
         }
-        public const uint SizeInBytes = 32;
+        public const uint SizeInBytes = 32; // TODO: shouldn't this be the same as sizeof(T)? It is a struct...
     }
 }
