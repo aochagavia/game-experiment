@@ -21,7 +21,13 @@ namespace Client
                 WindowTitle = "Skeleton"
             });
 
-            GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Sdl2Window);
+            var gdOptions = new GraphicsDeviceOptions
+			(
+				debug: false,
+				syncToVerticalBlank: true,
+				swapchainDepthFormat: null
+			);
+            GraphicsDevice = VeldridStartup.CreateGraphicsDevice(Sdl2Window, gdOptions);
         }
 
         public void Dispose()

@@ -49,9 +49,7 @@ namespace Client.Simulation
 
         public void Tick()
         {
-            // TODO: limit FPS in a smarter way
             Ticks++;
-            if (Ticks % 128 != 0) return;
 
             if (!_player.IsWalking) return;
 
