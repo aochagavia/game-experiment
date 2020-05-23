@@ -22,7 +22,7 @@ namespace Client
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
         private TileSetAddresser _tileSetAddresser;
-        private ArrayList<VertexPositionColorTexturePosition> vertices = new ArrayList<VertexPositionColorTexturePosition>();
+        private ArrayList<VertexPositionTexturePosition> vertices = new ArrayList<VertexPositionTexturePosition>();
 
         public WorldRenderer(GraphicsDevice graphicsDevice)
         {
@@ -36,7 +36,7 @@ namespace Client
 
         private void InitBuffers()
         {
-            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(vertices.Capacity * VertexPositionColorTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
+            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(vertices.Capacity * VertexPositionTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
         }
 
         private void InitTextures()
@@ -70,7 +70,6 @@ namespace Client
 
             var vertexLayout = new VertexLayoutDescription(
                 new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
-                new VertexElementDescription("Color", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float4),
                 new VertexElementDescription("TexturePosition", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2));
 
             var textureLayout = _graphicsDevice.ResourceFactory.CreateResourceLayout(
@@ -112,7 +111,7 @@ namespace Client
 
             var span = vertices.Elements.AsSpan();
 
-            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, ref span[0], vertices.Count * VertexPositionColorTexturePosition.SizeInBytes);
+            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, ref span[0], vertices.Count * VertexPositionTexturePosition.SizeInBytes);
         }
 
         private void DrawSkeleton(Player player)
@@ -146,14 +145,14 @@ namespace Client
         private void DrawTile(Vector2 position, Vector2 tilePosition, float tileWidth, float tileHeight)
         {
             // Triangle 1
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y)));
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y), new Vector2(tilePosition.X, tilePosition.Y)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
 
             // Triangle 2
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
-            vertices.Add(new VertexPositionColorTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), RgbaFloat.Red, new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
         }
 
         public void Draw(CommandList commandList, World world)
