@@ -78,7 +78,7 @@ namespace Client
 
             _resourceSet = _graphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(textureLayout, _skeletonTextureView));
 
-            pipelineDescription.BlendState = BlendStateDescription.SingleOverrideBlend;
+            pipelineDescription.BlendState = BlendStateDescription.SingleAlphaBlend;
             pipelineDescription.DepthStencilState = new DepthStencilStateDescription(
                 depthTestEnabled: true,
                 depthWriteEnabled: true,
