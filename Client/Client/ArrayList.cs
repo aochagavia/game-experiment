@@ -4,7 +4,7 @@ namespace Client
 {
     public class ArrayList<T>
     {
-        public T[] Elements { get; private set; } = new T[12];
+        public T[] Elements { get; private set; } = new T[1024];
         public uint Count { get; private set; } = 0;
 
         public uint Capacity => (uint)Elements.Length;

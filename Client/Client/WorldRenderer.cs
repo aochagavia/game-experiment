@@ -119,7 +119,7 @@ namespace Client
             // TODO: use a camera instead of rendering stuff directly
             var (tileWidth, tileHeight) = _tileSetAddresser.GetSkeletonTileDimensions();
 
-            var topOffset = tileHeight * player.Direction switch
+            var topOffset = player.Direction switch
             {
                 Direction.North => 0,
                 Direction.West => 1,
@@ -128,9 +128,7 @@ namespace Client
                 _ => 0, // Should never be reached
             };
 
-            var leftOffset = player.WalkingStep * tileWidth;
-
-            DrawTile(new Vector2(player.X, player.Y), new Vector2(leftOffset, topOffset), tileWidth, tileHeight);
+            DrawTile(new Vector2(player.X, player.Y), player.WalkingStep, topOffset, 0, tileWidth, tileHeight);
         }
 
         private void DrawSand()
@@ -138,21 +136,37 @@ namespace Client
             var (tileWidth, tileHeight) = _tileSetAddresser.GetSandTileDimensions();
             var topLeftX = _tileSetAddresser.GetSandTopLeftCornerX();
 
-            DrawTile(new Vector2(0, 0), new Vector2(topLeftX, 0), tileWidth, tileHeight);
+            var worldWidthTiles = 8;
 
+            for (var y = 0; y < worldWidthTiles; y++) {
+                var currentY = ((float)y) * 0.25f - 0.75f;
+                DrawTile(new Vector2(0, currentY), 2, 11, topLeftX, tileWidth, tileHeight);
+                DrawTile(new Vector2(0.25f, currentY), 2, 11, topLeftX, tileWidth, tileHeight);
+                DrawTile(new Vector2(0.50f, currentY), 2, 11, topLeftX, tileWidth, tileHeight);
+
+                DrawTile(new Vector2(0, currentY), 2, 3, topLeftX, tileWidth, tileHeight);
+                DrawTile(new Vector2(0.50f, currentY), 0, 3, topLeftX, tileWidth, tileHeight);
+                DrawTile(new Vector2(0.75f, currentY), 5, 3, topLeftX, tileWidth, tileHeight);
+
+                for (var x = 0; x < 4; x++) {
+                    DrawTile(new Vector2((x + 1) * -0.25f, currentY), 1, 3, topLeftX, tileWidth, tileHeight);
+                }
+            }
         }
 
-        private void DrawTile(Vector2 position, Vector2 tilePosition, float tileWidth, float tileHeight)
+        private void DrawTile(Vector2 screenPosition, int tileIndexX, int tileIndexY, float tileSetXOffset, float tileWidth, float tileHeight)
         {
+            Vector2 tilePosition = new Vector2(tileSetXOffset + tileIndexX * tileWidth, tileIndexY * tileHeight);
+
             // Triangle 1
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y), new Vector2(tilePosition.X, tilePosition.Y)));
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X, screenPosition.Y), new Vector2(tilePosition.X, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X + 0.25f, screenPosition.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X, screenPosition.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
 
             // Triangle 2
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
-            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X + 0.25f, screenPosition.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X, screenPosition.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(screenPosition.X + 0.25f, screenPosition.Y - 0.25f), new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
         }
 
         public void Draw(CommandList commandList, World world)
@@ -163,16 +177,9 @@ namespace Client
             commandList.ClearColorTarget(0, RgbaFloat.Black);
 
             commandList.SetVertexBuffer(0, _vertexBuffer);
-            // commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             commandList.SetPipeline(_pipeline);
             commandList.SetGraphicsResourceSet(0, _resourceSet);
             commandList.Draw(_vertices.Count);
-            // commandList.DrawIndexed(
-            //     indexCount: 4,
-            //     instanceCount: 1,
-            //     indexStart: 0,
-            //     vertexOffset: 0,
-            //     instanceStart: 0);
         }
 
         public void Dispose()

@@ -34,11 +34,16 @@ namespace Client
                 .DrawImage(skeletonTiles, PixelBlenderMode.Add, 1f, new SixLabors.Primitives.Point(0, 0))
                 .DrawImage(sandTiles, PixelBlenderMode.Add, 1f, new SixLabors.Primitives.Point(skeletonTiles.Width, 0))
             );
+
+            // Console.WriteLine(GetSkeletonTileDimensions());
+
+            // using var file = System.IO.File.Create("out.png");
+            // TileSet.SaveAsPng(file);
         }
 
         private Image<Rgba32> LoadImageFromResources(string path)
         {
-            var stream = _assembly.GetManifestResourceStream("Client.Tiles.BODY_skeleton.png");
+            var stream = _assembly.GetManifestResourceStream(path);
             if (stream == null)
             {
                 var x = _assembly.GetManifestResourceNames();
@@ -54,7 +59,7 @@ namespace Client
             var skeletonRelativeWidth = _skeletonImageWidth / totalWidth;
             var tileWidth = (1f / 9) * skeletonRelativeWidth;
 
-            var skeletonRelativeHeight = _skeletonImageHeight / _tileSetHeight;
+            var skeletonRelativeHeight = (float)_skeletonImageHeight / _tileSetHeight;
             var tileHeight = (1f / 4) * skeletonRelativeHeight;
 
             return (tileWidth, tileHeight);
@@ -64,10 +69,10 @@ namespace Client
         {
             float totalWidth = _skeletonImageWidth + _sandImageWidth;
             var sandRelativeWidth = _sandImageWidth / totalWidth;
-            var tileWidth = (1f / 12) * sandRelativeWidth;
+            var tileWidth = (1f / 9) * sandRelativeWidth;
 
-            var sandRelativeHeight = _sandImageHeight / _tileSetHeight;
-            var tileHeight = (1f / 14);
+            var sandRelativeHeight = (float)_sandImageHeight / _tileSetHeight;
+            var tileHeight = (1f / 12) * sandRelativeHeight;
 
             return (tileWidth, tileHeight);
         }
