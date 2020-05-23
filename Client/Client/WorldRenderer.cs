@@ -22,7 +22,7 @@ namespace Client
         private Pipeline _pipeline;
         private ResourceSet _resourceSet;
         private TileSetAddresser _tileSetAddresser;
-        private ArrayList<VertexPositionTexturePosition> vertices = new ArrayList<VertexPositionTexturePosition>();
+        private ArrayList<VertexPositionTexturePosition> _vertices = new ArrayList<VertexPositionTexturePosition>();
 
         public WorldRenderer(GraphicsDevice graphicsDevice)
         {
@@ -36,7 +36,7 @@ namespace Client
 
         private void InitBuffers()
         {
-            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(vertices.Capacity * VertexPositionTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
+            _vertexBuffer = _graphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(_vertices.Capacity * VertexPositionTexturePosition.SizeInBytes, BufferUsage.VertexBuffer));
         }
 
         private void InitTextures()
@@ -104,14 +104,14 @@ namespace Client
             var player = world.Players.FirstOrDefault();
 
 
-            vertices.Clear();
+            _vertices.Clear();
 
             DrawSand();
             DrawSkeleton(player);
 
-            var span = vertices.Elements.AsSpan();
+            var span = _vertices.Elements.AsSpan();
 
-            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, ref span[0], vertices.Count * VertexPositionTexturePosition.SizeInBytes);
+            _graphicsDevice.UpdateBuffer(_vertexBuffer, 0, ref span[0], _vertices.Count * VertexPositionTexturePosition.SizeInBytes);
         }
 
         private void DrawSkeleton(Player player)
@@ -145,14 +145,14 @@ namespace Client
         private void DrawTile(Vector2 position, Vector2 tilePosition, float tileWidth, float tileHeight)
         {
             // Triangle 1
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y), new Vector2(tilePosition.X, tilePosition.Y)));
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y), new Vector2(tilePosition.X, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
 
             // Triangle 2
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
-            vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y), new Vector2(tilePosition.X + tileWidth, tilePosition.Y)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X, position.Y - 0.25f), new Vector2(tilePosition.X, tilePosition.Y + tileHeight)));
+            _vertices.Add(new VertexPositionTexturePosition(new Vector2(position.X + 0.25f, position.Y - 0.25f), new Vector2(tilePosition.X + tileWidth, tilePosition.Y + tileHeight)));
         }
 
         public void Draw(CommandList commandList, World world)
@@ -166,7 +166,7 @@ namespace Client
             // commandList.SetIndexBuffer(_indexBuffer, IndexFormat.UInt16);
             commandList.SetPipeline(_pipeline);
             commandList.SetGraphicsResourceSet(0, _resourceSet);
-            commandList.Draw(vertices.Count);
+            commandList.Draw(_vertices.Count);
             // commandList.DrawIndexed(
             //     indexCount: 4,
             //     instanceCount: 1,
