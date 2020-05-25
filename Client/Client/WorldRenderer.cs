@@ -196,7 +196,6 @@ namespace Client
             _skeletonTextureView.Dispose();
 
             _vertexBuffer.Dispose();
-            // _indexBuffer.Dispose();
         }
     }
 }

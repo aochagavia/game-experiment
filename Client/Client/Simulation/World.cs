@@ -50,6 +50,10 @@ namespace Client.Simulation
         public void Tick()
         {
             Ticks++;
+            if (Ticks % 2 != 0)
+            {
+                return;
+            }
 
             if (!_player.IsWalking) return;
 
